@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <brand>
+        <headerColor>#A5CAEA</headerColor>
+        <logo>X1474906541PostgreSQLlogosmall</logo>
+        <logoVersion>1</logoVersion>
+        <shouldOverrideOrgTheme>true</shouldOverrideOrgTheme>
+    </brand>
+    <formFactors>Small</formFactors>
+    <formFactors>Large</formFactors>
+    <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
+    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
+    <label>Heroku Archiving Solution</label>
+    <navType>Standard</navType>
+    <tabs>Admin_Page</tabs>
+    <tabs>Configuration_Heroku__c</tabs>
+    <tabs>Vehicle__c</tabs>
+    <uiType>Lightning</uiType>
+    <utilityBar>Heroku_Arcieving_Solution_UtilityBar</utilityBar>
+</CustomApplication>

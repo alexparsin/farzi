@@ -1,0 +1,10 @@
+<template>
+    <div>
+        <lightning-combobox name = "Sports" label="Sports" value={value} placeholder="Select any Sports." options={options} onchange={handleChange}></lightning-combobox>
+    </div>
+    <div>
+        <template for:each={allValues} for:item="val">
+            <lightning-pill key={val} label={val} onremove={handleRemove}></lightning-pill>
+        </template>
+    </div>
+</template>
