@@ -1,5 +1,10 @@
 <template>
    <div class="c-container">
+      <template lwc:if={componentIsLoading}>
+         <div>
+            <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+         </div>
+      </template>
       <lightning-layout multiple-rows="true">
          <lightning-layout-item padding="around_small" size="12">
             <div class="page-section page-header">
@@ -8,470 +13,472 @@
             </div>
          </lightning-layout-item>
          <lightning-layout-item padding="around_small" size="12">
-            <lightning-layout multiple-rows>
-
-               <!-- Sidebar with Navigation Buttons -->
-
-               <lightning-layout-item padding="around_small" size="3">
-                  <div class="page-section page-right" style="height: 400px;">
-                     <lightning-button variant="base" label="Home" title="" icon-name="utility:home"
-                        class="slds-m-left_small" onclick={homeBarAction}></lightning-button>
+            <template lwc:if={configurationRequired}>
+               <lightning-layout-item padding="around_small" size="9">
+                  <div class="page-section page-main slds-align_absolute-center">
                      <br />
-                     <lightning-button variant="base" label="Create New Flow" title="All Objects in the Org are shown here."
-                        icon-name="utility:touch_action" class="slds-m-left_small"
-                        onclick={allObjectSideBarAction}></lightning-button>
+                     <lightning-button variant="brand" label="Generate Sync Config" title=""
+                        icon-name="utility:magicwand" class="slds-m-left_small" onclick={generateConfiguration}>
+                     </lightning-button>
                      <br />
-                     <!--lightning-button variant="sub" label="flow 1" title="flow 1 ." icon-name="black dot" class="slds-m-left_small"></lightning-button>
-                      <br/>
-                      <lightning-button variant="sub" label="flow 2" title="flow 2." icon-name="black dot" class="slds-m-left_small"></lightning-button-->
                   </div>
                </lightning-layout-item>
+            </template>
+            <template lwc:else>
+               <lightning-layout multiple-rows>
 
-               <lightning-layout-item padding="around_small" size="9">
-                  <div class="page-section page-main">
-                     <template if:true={allObjects}>
+                  <!-- Sidebar with Navigation Buttons -->
 
-                        <!--Progress indicator for the Objects Configuration-->
+                  <lightning-layout-item padding="around_small" size="3">
+                     <div class="page-section page-right" style="height: 400px;">
+                        <lightning-button variant="base" label="Home" title="" icon-name="utility:home"
+                           class="slds-m-left_small" onclick={homeBarAction}></lightning-button>
+                        <br />
+                        <lightning-button variant="base" label="Create New Flow"
+                           title="All Objects in the Org are shown here." icon-name="utility:touch_action"
+                           class="slds-m-left_small" onclick={allObjectSideBarAction}></lightning-button>
+                        <br />
+                     </div>
+                  </lightning-layout-item>
 
-                        <div class="page-section page-header">
-                           <!--div class="slds-text-heading_large slds-text-title_caps slds-text-color_success">All Objects
-                           </div-->
+                  <lightning-layout-item padding="around_small" size="9">
+                     <div class="page-section page-main">
+                        <template if:true={allObjects}>
 
-                           <lightning-progress-indicator current-step={progressIndicator} type="path" variant="shaded">
-                              <lightning-progress-step label="Select Object" onstepfocus={selectStep1} value="Step1">
-                              </lightning-progress-step>
-                              <lightning-progress-step label="Choose fields" onstepfocus={selectStep2} value="Step2">
-                              </lightning-progress-step>
-                              <lightning-progress-step label="Select filters for records to migrate"
-                                 onstepfocus={selectStep3} value="Step3">
-                              </lightning-progress-step>
-                              <lightning-progress-step label="Define frequency for data migration"
-                                 onstepfocus={selectStep4} value="Step4">
-                              </lightning-progress-step>
-                           </lightning-progress-indicator>
+                           <!--Progress indicator for the Objects Configuration-->
 
-                        </div>
+                           <div class="page-section page-header">
 
-                        <div class="page-section page-main">
+                              <lightning-progress-indicator current-step={progressIndicator} type="path"
+                                 variant="shaded">
+                                 <lightning-progress-step label="Select Flow" onstepfocus={selectStep0} value="Step0">
+                                 </lightning-progress-step>
+                                 <lightning-progress-step label="Select Object" onstepfocus={selectStep1} value="Step1">
+                                 </lightning-progress-step>
+                                 <lightning-progress-step label="Choose fields" onstepfocus={selectStep2} value="Step2">
+                                 </lightning-progress-step>
+                                 <lightning-progress-step label="Select filters for records to migrate"
+                                    onstepfocus={selectStep3} value="Step3">
+                                 </lightning-progress-step>
+                                 <lightning-progress-step label="Define frequency for data migration"
+                                    onstepfocus={selectStep4} value="Step4">
+                                 </lightning-progress-step>
+                              </lightning-progress-indicator>
 
-                           <!--Section for All Objects-->
-
-                           <div class="slds-m-around_medium">
-                              <template if:true={allObjectsTable}>
-
-                                 <lightning-layout multiple-rows>
-                                    <lightning-layout-item padding="around_small" size="6"></lightning-layout-item>
-                                    <lightning-layout-item padding="around_small" size="4">
-                                       <lightning-input type="search" label="Search Object"
-                                          onchange={handleSearch_Object}></lightning-input>
-                                    </lightning-layout-item>
-                                    <!--lightning-layout-item padding="around_small" size="2">
-                                       <br />&nbsp; <lightning-button-icon icon-name="utility:refresh"
-                                          onclick={refreshObjects} alternative-text="Refresh"
-                                          title="Refresh"></lightning-button-icon>
-                                    </lightning-layout-item-->
-                                 </lightning-layout>
-                                 <br />
-
-                                 <div style="height: 250px;">
-                                       <lightning-datatable data-id="datarow" 
-                                       key-field="objectAPIName" 
-                                       data={objList} 
-                                       columns={columns}
-                                       onrowselection={allObjectRowSelection} 
-                                       selected-rows={allObjevctSelectUI}
-                                       sorted-by={sortBy}
-                                        sorted-direction={sortDirection}
-                                        onsort={handleSortObjectData}
-                                       ></lightning-datatable>
-                                 </div>
-                              </template>
                            </div>
 
-                           <!--Section for Selected Objects-->
+                           <div class="page-section page-main">
+
+                              <!-- SELECT FLOW SECTION-->
 
                               <div class="slds-m-around_medium">
-                              <template if:true={selectedObjectsTable}>
-                             <!--    <div>
-                                    <lightning-datatable key-field="objectAPIName" data={selectedObjList} columns={columns}
-                                       onrowselection={selectedObjectRowSelection} ></lightning-datatable>
-                                 </div>
-                              -->
-                                 <table class="slds-table slds-table_cell-buffer slds-table_bordered">
-                            <thead>
-                                <tr class="">
-                                   <th class="slds-size_1-of-10" scope="col">
-                                        <div class="slds-truncate" title="Account Name">
-                                           Select
-                                        </div>
-                                    </th>
-                                    <th class="slds-size_3-of-10" scope="col">
-                                        <div class="slds-truncate" title="Control" style="width: 117px;">
-                                            Object Name
-                                        </div>
-                                    </th>
-                                    <th class="slds-size_3-of-10" scope="col">
-                                        <div class="slds-truncate" title="Control" style="width: 90px;">
-                                            Type
-                                        </div>
-                                    </th>
-                                    <th class="slds-size_3-of-10" scope="col">
-                                        <div class="slds-truncate" title="Job Type" style="width: 90px;">
-                                            Api Name
-                                        </div>
-                                    </th>                                                                   
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template for:each={selectedObjList} for:item="item" for:index="indexVar">
-                                    <tr key={item.key} class="slds-hint-parent">
-                                        <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
-                                            <div title="Prospecting">
-											         <input type="radio" name="radioName" key={item.key} data-id={item.objectAPIName} onchange={selectedObjectRowSelection}/>
+                                 <template if:true={flowSelectPage}>
+                                    <div class="slds-grid slds-gutters slds-wrap">
+                                       <div class="slds-col slds-grid slds-size_1-of-1 slds-var-p-around_medium">
+                                          <div class="slds-col slds-size_1-of-3 slds-text-align_right">
+                                             <lightning-button variant="brand" label="Regular Flow" title="Regular Flow"
+                                                onclick={selectRegularFLow} class="slds-m-left_x-small">
+                                             </lightning-button>
+                                          </div>
+                                          <div class="slds-col slds-size_2-of-3">
+                                             <div> - Select up to 5 Objects to synchronize with Heroku</div>
+                                          </div>
                                        </div>
-                                        </td>
-                                        <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
-                                            <div title="Prospecting">
-                                               {item.objectName}
-                                            </div>
-                                        </td>
-                                        <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
-                                            <div title="Prospecting">
-                                              {item.objectType}
-                                            </div>
-                                        </td>
-                                        <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
-                                            <div title="Prospecting">
-                                              {item.objectAPIName}
-                                            </div>
-                                        </td>                                      									
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
+                                       <div class="slds-col slds-grid slds-size_1-of-1 slds-var-p-around_medium">
+                                          <div class="slds-col slds-size_1-of-3 slds-text-align_right">
+                                             <lightning-button variant="brand" label="Objects with Children"
+                                                title="Objects with Children" onclick={selectChildrenFlow}
+                                                class="slds-m-left_x-small"></lightning-button>
+                                          </div>
+                                          <div class="slds-col slds-size_2-of-3">
+                                             <div> - Select an Object and its children to be synchronized</div>
+                                          </div>
+                                       </div>
+                                    </div>
+                                 </template>
+                              </div>
 
-                                 <!-- Search functionality for fields -->
+                              <!--Section for All Objects-->
 
-                                 <template if:true={fieldList}>
+                              <div class="slds-m-around_medium">
+                                 <template if:true={allObjectsTable}>
 
                                     <lightning-layout multiple-rows>
                                        <lightning-layout-item padding="around_small" size="6"></lightning-layout-item>
                                        <lightning-layout-item padding="around_small" size="4">
-                                          <lightning-input type="search" label="Search Field"
-                                             onchange={handleSearch_Field}></lightning-input>
+                                          <lightning-input type="search" label="Search Object"
+                                             onchange={handleSearch_Object}></lightning-input>
                                        </lightning-layout-item>
-                                       <!--lightning-layout-item padding="around_small" size="2">
-                                          <br /> &nbsp; <lightning-button-icon icon-name="utility:refresh"
-                                             alternative-text="Refresh" title="Refresh"
-                                             onclick={refreshFields}></lightning-button-icon>
-                                       </lightning-layout-item-->
                                     </lightning-layout>
                                     <br />
 
-                                    <div style="height: 200px;">
-                                       <lightning-datatable key-field="id" 
-                                        data={fieldList} 
-                                        columns={fieldColumns}
-                                          onrowselection={selectedFieldRowSelection}
-                                          sorted-by={sortBy}
-                                          sorted-direction={sortDirection}
-                                          onsort={handleSortFieldsData}
-                                          ></lightning-datatable>
+                                    <div style="height: 250px;">
+                                       <lightning-datatable data-id="datarow" key-field="objectAPIName" data={objList}
+                                          columns={columns} onrowselection={allObjectRowSelection}
+                                          selected-rows={allObjevctSelectUI} sorted-by={sortBy}
+                                          sorted-direction={sortDirection} onsort={handleSortObjectData}>
+                                       </lightning-datatable>
                                     </div>
                                  </template>
-                              </template>
-                           </div>
+                              </div>
 
-                           <!--Page for filtering data-->
+                              <!-- SELECT PARENT OBJECTS SECTION-->
 
-                           <div class="slds-m-around_medium">
-                              <template if:true={filteringPage}>
-                                 <div>
-                                      <!--  <lightning-datatable key-field="id" data={selectedObjList} columns={columns}  onrowaction={handleRowAction}>
-                                         </lightning-datatable>
-                                    <lightning-datatable-row-template>
-                                          <template if:true={expandable}>
-                                              <div class="expandable-content">
-                                                   Add expandable content here 
-                                              </div>
+                              <div class="slds-m-around_medium">
+                                 <template if:true={parentObjectsTable}>
+
+                                    <lightning-layout multiple-rows>
+                                       <lightning-layout-item padding="around_small" size="6"></lightning-layout-item>
+                                       <lightning-layout-item padding="around_small" size="4">
+                                          <lightning-input type="search" label="Search Object"
+                                             onchange={handleSearch_Object}></lightning-input>
+                                       </lightning-layout-item>
+                                    </lightning-layout>
+                                    <br />
+
+                                    <div style="height: 250px;">
+                                       <lightning-datatable data-id="datarow" key-field="objectAPIName" data={objList}
+                                          columns={columns} onrowselection={allObjectRowSelection}
+                                          selected-rows={allObjevctSelectUI} sorted-by={sortBy}
+                                          sorted-direction={sortDirection} onsort={handleSortObjectData}
+                                          max-row-selection="1">
+                                       </lightning-datatable>
+                                    </div>
+
+                                    <br />
+                                    <p>Select related Objects</p>
+                                    <div style="height: 250px;">
+                                       <lightning-datatable data-id="datarow" key-field="objectAPIName"
+                                          data={relatedObjList} columns={columns} onrowselection={allObjectRowSelection}
+                                          selected-rows={allObjevctSelectUI} sorted-by={sortBy}
+                                          sorted-direction={sortDirection} onsort={handleSortObjectData}
+                                          max-row-selection="1">
+                                       </lightning-datatable>
+                                    </div>
+                                 </template>
+                              </div>
+
+                              <!--Section for Selected Objects-->
+
+                              <div class="slds-m-around_medium">
+                                 <template if:true={selectedObjectsTable}>
+                                    <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                                       <thead>
+                                          <tr class="">
+                                             <th class="slds-size_1-of-10" scope="col">
+                                                <div class="slds-truncate" title="Account Name">
+                                                   Select
+                                                </div>
+                                             </th>
+                                             <th class="slds-size_3-of-10" scope="col">
+                                                <div class="slds-truncate" title="Control" style="width: 117px;">
+                                                   Object Name
+                                                </div>
+                                             </th>
+                                             <th class="slds-size_3-of-10" scope="col">
+                                                <div class="slds-truncate" title="Control" style="width: 90px;">
+                                                   Type
+                                                </div>
+                                             </th>
+                                             <th class="slds-size_3-of-10" scope="col">
+                                                <div class="slds-truncate" title="Job Type" style="width: 90px;">
+                                                   Api Name
+                                                </div>
+                                             </th>
+                                          </tr>
+                                       </thead>
+                                       <tbody>
+                                          <template for:each={selectedObjList} for:item="item" for:index="indexVar">
+                                             <tr key={item.key} class="slds-hint-parent">
+                                                <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
+                                                   <div title="Prospecting">
+                                                      <input type="radio" name="radioName" key={item.key}
+                                                         data-id={item.objectAPIName}
+                                                         onchange={selectedObjectRowSelection} />
+                                                   </div>
+                                                </td>
+                                                <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
+                                                   <div title="Prospecting">
+                                                      {item.objectName}
+                                                   </div>
+                                                </td>
+                                                <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
+                                                   <div title="Prospecting">
+                                                      {item.objectType}
+                                                   </div>
+                                                </td>
+                                                <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
+                                                   <div title="Prospecting">
+                                                      {item.objectAPIName}
+                                                   </div>
+                                                </td>
+                                             </tr>
                                           </template>
-                                      </lightning-datatable-row-template> -->
-                                 
-                                 </div>
-                                 <!--lightning-layout multiple-rows>
-                                    <lightning-layout-item padding="around_small" size="5">
-                                       <lightning-combobox name="Created Date filters" label="Created Date"
-                                          value={createdDateFilterValue} options={createdDateFilterOptions}
-                                          onchange={handleCreatedDateFilterChange}></lightning-combobox>
-                                    </lightning-layout-item>
-                                    <lightning-layout-item padding="around_small" size="1"></lightning-layout-item>
-                                    <lightning-layout-item padding="around_small" size="5">
-                                       <lightning-input type="date" label="Select any date"
-                                          name="input1"></lightning-input>
-                                    </lightning-layout-item>
-                                 </lightning-layout>
-                                 <lightning-layout multiple-rows>
-                                    <lightning-layout-item padding="around_small" size="5">
-                                       <div>
-                                          <lightning-combobox name="Record Type" label="Record Type"
-                                             value={recordTypeValue} options={recordTypeOptions}
-                                             onchange={recordTypeChange}></lightning-combobox>
+                                       </tbody>
+                                    </table>
+
+                                    <!-- Search functionality for fields -->
+
+                                    <template if:true={fieldList}>
+
+                                       <lightning-layout multiple-rows>
+                                          <lightning-layout-item padding="around_small" size="6">
+                                          </lightning-layout-item>
+                                          <lightning-layout-item padding="around_small" size="4">
+                                             <lightning-input type="search" label="Search Field"
+                                                onchange={handleSearch_Field}></lightning-input>
+                                          </lightning-layout-item>
+                                          <!--lightning-layout-item padding="around_small" size="2">
+                                             <br /> &nbsp; <lightning-button-icon icon-name="utility:refresh"
+                                                alternative-text="Refresh" title="Refresh"
+                                                onclick={refreshFields}></lightning-button-icon>
+                                          </lightning-layout-item-->
+                                       </lightning-layout>
+                                       <br />
+
+                                       <div style="height: 200px;">
+                                          <lightning-datatable key-field="id" data={fieldList} columns={fieldColumns}
+                                             onrowselection={selectedFieldRowSelection} sorted-by={sortBy}
+                                             sorted-direction={sortDirection} onsort={handleSortFieldsData}>
+                                          </lightning-datatable>
                                        </div>
-                                       <div>
-                                          <template for:each={selectedRecordTypes} for:item="val">
-                                             <lightning-pill key={val} label={val}
-                                                onremove={handleRemove_RecordType}></lightning-pill>
+                                    </template>
+                                 </template>
+                              </div>
+
+                              <!--Page for filtering data-->
+
+                              <div class="slds-m-around_medium">
+                                 <template if:true={filteringPage}>
+                                    <div>
+
+                                    </div>
+
+
+
+                                    <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                                       <thead>
+                                          <tr class="">
+                                             <th class="slds-size_3-of-10" scope="col">
+                                                <div class="slds-truncate" title="Control" style="width: 117px;">
+                                                   Object Name
+                                                </div>
+                                             </th>
+                                             <th class="slds-size_3-of-10" scope="col">
+                                                <div class="slds-truncate" title="Control" style="width: 90px;">
+                                                   Type
+                                                </div>
+                                             </th>
+                                             <th class="slds-size_3-of-10" scope="col">
+                                                <div class="slds-truncate" title="Job Type" style="width: 90px;">
+                                                   Api Name
+                                                </div>
+                                             </th>
+                                             <th class="slds-size_3-of-10" scope="col">
+                                                <div class="slds-truncate" title="Action" style="width: 90px;">
+                                                   Add Filter/Modify
+                                                </div>
+                                             </th>
+                                             <th class="slds-size_3-of-10" scope="col">
+                                                <div class="slds-truncate" title="Action" style="width: 120px;">
+                                                   View Filter Condition
+                                                </div>
+                                             </th>
+                                          </tr>
+                                       </thead>
+                                       <tbody>
+                                          <template for:each={selectedObjList} for:item="item" for:index="indexVar">
+                                             <tr key={item.key} class="slds-hint-parent">
+                                                <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
+                                                   <div title="Prospecting">
+                                                      {item.objectName}
+                                                   </div>
+                                                </td>
+                                                <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
+                                                   <div title="Prospecting">
+                                                      {item.objectType}
+                                                   </div>
+                                                </td>
+                                                <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
+                                                   <div title="Prospecting">
+                                                      {item.objectAPIName}
+                                                   </div>
+                                                </td>
+                                                <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
+                                                   <div title="Prospecting">
+                                                      <lightning-button label="Add/Modify Filter" key={item.key}
+                                                         data-id={item.objectAPIName} onclick={showModalBox}
+                                                         class="slds-m-left_x-small"></lightning-button>
+                                                   </div>
+                                                </td>
+                                                <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
+                                                   <div title="Prospecting">
+                                                      <lightning-input type="text" key={item.key}
+                                                         data-id={item.objectAPIName} variant="label-hidden" read-only
+                                                         value={item.ObjWhereCondition}></lightning-input>
+
+                                                   </div>
+                                                </td>
+                                             </tr>
                                           </template>
+                                       </tbody>
+                                    </table>
+                                 </template>
+                              </div>
+
+
+                              <template if:true={isShowModal}>
+                                 <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01"
+                                    aria-modal="true" aria-describedby="modal-content-id-1"
+                                    class="slds-modal slds-fade-in-open">
+                                    <div class="slds-modal__container">
+                                       <!-- modal header start -->
+                                       <header class="slds-modal__header">
+                                          <button
+                                             class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                                             title="Close" onclick={hideModalBox}>
+                                             <lightning-icon icon-name="utility:close" alternative-text="close"
+                                                variant="inverse" size="small"></lightning-icon>
+
+                                          </button>
+                                          <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">
+                                             Add/Modify Filter</h2>
+                                       </header>
+
+                                       <!-- modal body start -->
+                                       <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                                          <lightning-textarea name="FilterSync" value={filterCondition}
+                                             label="This filter is applied when the object syncs."
+                                             placeholder="Enter a filter using syntax supported by your system."
+                                             onchange={filterUpdate}></lightning-textarea>
                                        </div>
-                                    </lightning-layout-item>
-                                 </lightning-layout-->
 
-
-
-<table class="slds-table slds-table_cell-buffer slds-table_bordered">
-                            <thead>
-                                <tr class="">
-                                  <!--  <th class="slds-size_1-of-10" scope="col">
-                                        <div class="slds-truncate" title="Account Name">
-                                            Sr No.
-                                        </div>
-                                    </th> -->
-                                    <th class="slds-size_3-of-10" scope="col">
-                                        <div class="slds-truncate" title="Control" style="width: 117px;">
-                                            Object Name
-                                        </div>
-                                    </th>
-                                    <th class="slds-size_3-of-10" scope="col">
-                                        <div class="slds-truncate" title="Control" style="width: 90px;">
-                                            Type
-                                        </div>
-                                    </th>
-                                    <th class="slds-size_3-of-10" scope="col">
-                                        <div class="slds-truncate" title="Job Type" style="width: 90px;">
-                                            Api Name
-                                        </div>
-                                    </th>
-                                    <th class="slds-size_3-of-10" scope="col">
-                                        <div class="slds-truncate" title="Action" style="width: 90px;">
-                                            Add Filter/Modify
-                                        </div>
-                                    </th>
-                                    <th class="slds-size_3-of-10" scope="col">
-                                        <div class="slds-truncate" title="Action" style="width: 120px;">
-                                            View Filter Condition
-                                        </div>
-                                    </th>                                   
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template for:each={selectedObjList} for:item="item" for:index="indexVar">
-                                    <tr key={item.key} class="slds-hint-parent">
-                                     <!--   <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
-                                            <div title="Prospecting">
-											           {indexVar}
-                                       </div>
-                                        </td> -->
-                                        <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
-                                            <div title="Prospecting">
-                                               {item.objectName}
-                                            </div>
-                                        </td>
-                                        <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
-                                            <div title="Prospecting">
-                                              {item.objectType}
-                                            </div>
-                                        </td>
-                                        <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
-                                            <div title="Prospecting">
-                                              {item.objectAPIName}
-                                            </div>
-                                        </td>
-                                        <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
-                                            <div title="Prospecting">
-                                            <lightning-button label="Add/Modify Filter" key={item.key} data-id={item.objectAPIName} onclick={showModalBox} class="slds-m-left_x-small"></lightning-button>
-                                            </div>
-                                        </td>
-                                        <td class="slds-size_3-of-10 slds-cell-wrap" data-label="Prospecting">
-                                            <div title="Prospecting">
-                                                 <lightning-input type="text" key={item.key} data-id={item.objectAPIName} variant="label-hidden" read-only value={item.ObjWhereCondition}></lightning-input>
-                                              
-                                            </div>
-                                        </td>										
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
-
-
-
-                              <!-- 
-                                    sorted-by={sortBy}
-                           sorted-direction={sortDirection}
-                            onsort={doSorting}
-                                 
-                                   <lightning-layout multiple-rows>
-                                    <lightning-layout-item padding="around_small" size="12">
-                                       <lightning-textarea name="FilterSync" value={filterCondition}
-                                          label="This filter is applied when the object syncs."
-                                          placeholder="Enter a filter using syntax supported by your system."
-                                           onchange={filterUpdate}
-                                          ></lightning-textarea>
-                                    </lightning-layout-item>
-                                    <lightning-layout-item padding="around_small" size="12">
-                                       <lightning-button-group>
+                                       <!-- modal footer start-->
+                                       <footer class="slds-modal__footer">
                                           <lightning-button label="Check Syntax" disabled={syntaxCheckVisibility}
                                              onclick={syntaxCheckAction} icon-name="action:check"></lightning-button>
                                           <lightning-button label="Reset" icon-name="action:reset_password"
                                              disabled={resetVisibility} onclick={resetAction}></lightning-button>
-                                       </lightning-button-group>
-                                    </lightning-layout-item>
-                                 </lightning-layout> -->
+                                          <lightning-button label="Cancel" onclick={hideModalBox}
+                                             class="slds-m-left_x-small"></lightning-button>
+
+                                       </footer>
+
+                                    </div>
+                                 </section>
+                                 <div class="slds-backdrop slds-backdrop_open"></div>
                               </template>
+
+
+
+                              <!--Page for scheduling job Objects-->
+
+                              <div class="slds-m-around_medium">
+                                 <template if:true={schedulingPage}>
+                                    <lightning-layout multiple-rows>
+                                       <lightning-layout-item padding="around_small" size="2">
+                                          <p>
+                                             <lightning-formatted-text value="Schedule by"></lightning-formatted-text>
+                                          </p>
+                                       </lightning-layout-item>
+                                       <lightning-layout-item padding="around_small" size="10">
+                                          <lightning-radio-group name="radioGroup" variant=label-hidden required
+                                             label="Schedule by" options={options} value={value} type="button"
+                                             onchange={handleschChange}></lightning-radio-group>
+                                       </lightning-layout-item>
+                                    </lightning-layout>
+                                    <lightning-layout multiple-rows>
+                                       <lightning-layout-item padding="around_small" size="2">
+                                          <p>
+                                             <lightning-formatted-text value="Starts at"></lightning-formatted-text>
+                                          </p>
+                                       </lightning-layout-item>
+                                       <lightning-layout-item padding="around_small" size="3">
+                                          <lightning-input type="time" class="startsAt" name="input4" label=""
+                                             variant=label-hidden required onchange={handleschChangetime}>
+                                          </lightning-input>
+                                       </lightning-layout-item>
+                                       <lightning-layout-item padding="around_small" size="6"></lightning-layout-item>
+                                    </lightning-layout>
+                                    <lightning-layout multiple-rows>
+                                       <lightning-layout-item padding="around_small" size="2">
+                                          <p>
+                                             <lightning-formatted-text value="Date"></lightning-formatted-text>
+                                          </p>
+                                       </lightning-layout-item>
+                                       <lightning-layout-item padding="around_small" size="3">
+                                          <lightning-input type="date" class="dateCls" name="input4" min={today}
+                                             label="" variant=label-hidden required onchange={handleschChangeDate}>
+                                          </lightning-input>
+                                       </lightning-layout-item>
+                                       <lightning-layout-item padding="around_small" size="6"></lightning-layout-item>
+                                    </lightning-layout>
+                                    <br />
+                                    <lightning-layout multiple-rows>
+                                       <lightning-layout-item padding="around_small" size="2">
+                                          <p>
+                                             <lightning-formatted-text value="Runs on"></lightning-formatted-text>
+                                          </p>
+                                       </lightning-layout-item>
+                                       <lightning-layout-item padding="around_small" size="9">
+                                          <lightning-checkbox-group name="Checkbox Group" variant=label-hidden required
+                                             label="Runs on" options={options1} value={value}
+                                             onchange={handleChangeWeek}>
+                                          </lightning-checkbox-group>
+                                       </lightning-layout-item>
+                                    </lightning-layout>
+                                 </template>
+                              </div>
+
                            </div>
 
+                           <!--Navigation Button common-->
 
-   <template if:true={isShowModal}>
-    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
-       <div class="slds-modal__container">
-        <!-- modal header start -->
-          <header class="slds-modal__header">
-             <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={hideModalBox}>
-                <lightning-icon icon-name="utility:close"
-                   alternative-text="close"
-                   variant="inverse"
-                   size="small" ></lightning-icon>
-              
-             </button>
-             <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Add/Modify Filter</h2>
-          </header>
-      
-          <!-- modal body start -->
-          <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
-                <lightning-textarea name="FilterSync" value={filterCondition}
-                                          label="This filter is applied when the object syncs."
-                                          placeholder="Enter a filter using syntax supported by your system."
-                                          onchange={filterUpdate}
-                                          ></lightning-textarea>
-          </div>
-
-          <!-- modal footer start-->
-          <footer class="slds-modal__footer">
-                                       <lightning-button label="Check Syntax" disabled={syntaxCheckVisibility}
-                                             onclick={syntaxCheckAction} icon-name="action:check"></lightning-button>
-                                          <lightning-button label="Reset" icon-name="action:reset_password"
-                                             disabled={resetVisibility} onclick={resetAction}></lightning-button>
-                                             <lightning-button label="Cancel" onclick={hideModalBox} class="slds-m-left_x-small"></lightning-button>
-
-          </footer>
-       
-       </div>
-    </section>
-    <div class="slds-backdrop slds-backdrop_open"></div>
- </template>
-
-
-
-                           <!--Page for scheduling job Objects-->
-
-                           <div class="slds-m-around_medium">
-                              <template if:true={schedulingPage}>
-                                 <lightning-layout multiple-rows>
-                                    <lightning-layout-item padding="around_small" size="2">
-                                       <p><lightning-formatted-text value="Schedule by"></lightning-formatted-text></p>
-                                    </lightning-layout-item>
-                                    <lightning-layout-item padding="around_small" size="10">
-                                       <lightning-radio-group name="radioGroup" variant=label-hidden required 
-                                       label="Schedule by"
-                                       options={options}
-                                       value={value}
-                                       type="button"
-                                       onchange={handleschChange}></lightning-radio-group>
-                                    </lightning-layout-item>
-                                 </lightning-layout>
-                                 <lightning-layout multiple-rows>
-                                    <lightning-layout-item padding="around_small" size="2">
-                                       <p><lightning-formatted-text value="Starts at"></lightning-formatted-text></p>
-                                    </lightning-layout-item>
-                                    <lightning-layout-item padding="around_small" size="3">
-                                       <lightning-input type="time" class="startsAt" name="input4" label="" variant=label-hidden required onchange={handleschChangetime}></lightning-input>
-                                    </lightning-layout-item>
-                                    <lightning-layout-item padding="around_small" size="6"></lightning-layout-item>
-                                 </lightning-layout>
-                                 <lightning-layout multiple-rows>
-                                    <lightning-layout-item padding="around_small" size="2">
-                                       <p><lightning-formatted-text value="Date"></lightning-formatted-text></p>
-                                    </lightning-layout-item>
-                                    <lightning-layout-item padding="around_small" size="3">
-                                       <lightning-input type="date" class="dateCls" name="input4" min={today} label="" variant=label-hidden required onchange={handleschChangeDate}></lightning-input>
-                                    </lightning-layout-item>
-                                    <lightning-layout-item padding="around_small" size="6"></lightning-layout-item>
-                                 </lightning-layout>
-                                 <br />
-                                 <lightning-layout multiple-rows>
-                                    <lightning-layout-item padding="around_small" size="2">
-                                       <p><lightning-formatted-text value="Runs on"></lightning-formatted-text></p>
-                                    </lightning-layout-item>
-                                    <lightning-layout-item padding="around_small" size="9">
-                                       <lightning-checkbox-group name="Checkbox Group" variant=label-hidden required 
-                                       label="Runs on"
-                                       options={options1}
-                                       value={value}
-                                       onchange={handleChangeWeek}></lightning-checkbox-group>
-                                    </lightning-layout-item>
-                                 </lightning-layout>
-                              </template>
-                           </div>
-
-                        </div>
-
-                        <!--Navigation Button common-->
-
-                        <div class="page-footer page-section">
-                           <div class="slds-float_right">
-                              <lightning-button-group>
-                                 <lightning-button label="Back" disabled={backNavigationVisibility}
-                                    onclick={backNavigationAction} icon-name="utility:chevronleft"></lightning-button>
+                           <div class="page-footer page-section">
+                              <div class="slds-float_right">
+                                 <lightning-button-group>
+                                    <lightning-button label="Back" disabled={backNavigationVisibility}
+                                       onclick={backNavigationAction} icon-name="utility:chevronleft">
+                                    </lightning-button>
                                     <template if:true={nextbutton}>
-                                 <lightning-button label="Next" icon-name="utility:chevronright"
-                                    disabled={nextNavigationVisibility}
-                                    onclick={nextNavigationAction}></lightning-button>
-                                 </template>   
+                                       <lightning-button label="Next" icon-name="utility:chevronright"
+                                          disabled={nextNavigationVisibility} onclick={nextNavigationAction}>
+                                       </lightning-button>
+                                    </template>
                                     <template if:true={savebutton}>
                                        <lightning-button label="Savedata" icon-name="utility:chevronright"
-                                       onclick={saveMetadataAction} disabled={SaveNavigationVisibility}></lightning-button>
+                                          onclick={saveMetadataAction} disabled={SaveNavigationVisibility}>
+                                       </lightning-button>
                                     </template>
-                                 <lightning-button label="Cancel" disabled={cancelNavigationVisibility}
-                                    onclick={cancelNavigationAction} icon-name="utility:close"></lightning-button>
-                              </lightning-button-group>
+                                    <lightning-button label="Cancel" disabled={cancelNavigationVisibility}
+                                       onclick={cancelNavigationAction} icon-name="utility:close"></lightning-button>
+                                 </lightning-button-group>
+                              </div>
+
                            </div>
 
-                        </div>
 
-
-                     </template>
-                     <template if:true={homeSummary}>  
-                         <lightning-card variant="Narrow" title="Configuration Herokus" icon-name="utility:connected_apps">
-                                       <c-paginator records={RTDData} total-records={rtdRecordCount} show-search-box="true" cmp-page-size="10" onpaginatorchange={handlePaginatorChange}>
-                </c-paginator>
-                        <lightning-datatable
-                         key-field="id"
-                        hide-checkbox-column="true"
-                         data={recordsToDisplay} 
-                         columns={herokuColumnss}                         
-                          sorted-by={sortBy}
-                         sorted-direction={sortDirection}
-                        onsort={handleSortHerokuData}>
+                        </template>
+                        <template if:true={homeSummary}>
+                           <lightning-card variant="Narrow" title="Configuration Herokus"
+                              icon-name="utility:connected_apps">
+                              <c-paginator records={RTDData} total-records={rtdRecordCount} show-search-box="true"
+                                 cmp-page-size="10" onpaginatorchange={handlePaginatorChange}>
+                              </c-paginator>
+                              <lightning-datatable key-field="id" hide-checkbox-column="true" data={recordsToDisplay}
+                                 columns={herokuColumnss} sorted-by={sortBy} sorted-direction={sortDirection}
+                                 onsort={handleSortHerokuData}>
                               </lightning-datatable>
-                         </lightning-card>
-                     </template>
-                  </div>
-               </lightning-layout-item>
-            </lightning-layout>
+                           </lightning-card>
+                        </template>
+                     </div>
+                  </lightning-layout-item>
+               </lightning-layout>
+            </template>
          </lightning-layout-item>
 
          <lightning-layout-item flexibility="auto" padding="around_small" size="12">
             <div class="page-footer page-section">
-               <h2>Footer</h2>
             </div>
          </lightning-layout-item>
       </lightning-layout>

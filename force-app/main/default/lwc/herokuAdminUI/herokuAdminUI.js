@@ -1,5 +1,7 @@
 import { LightningElement, wire, track, api } from 'lwc';
 import loadObjects from '@salesforce/apex/HerokuAdminUIController.retrieveObjects';
+import loadConfig from '@salesforce/apex/HerokuAdminUIController.getSyncConfig';
+import generateSyncConfig from '@salesforce/apex/HerokuAdminUIController.generateSyncConfig';
 import getFields from '@salesforce/apex/HerokuAdminUIController.getFields';
 import checkSyntax from '@salesforce/apex/HerokuAdminUIController.checkSyntax';
 import saveMetadata from '@salesforce/apex/HerokuAdminUIController.saveMetadata';
@@ -52,10 +54,12 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
 
     @track herokuColumnss=columnshe;
     @track error;
-    @track objList ;
+    @track objList;
+    @track relatedObjList;
     @track selectedObjList;
     //@track allObjevctSelectUI = [];
     @track allObjectsTable = false;
+    @track parentObjectsTable = false;
     @track selectedObjectsTable = false;
     @track fieldList ;
     columns = columns;
@@ -72,9 +76,10 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     @track sortDirection;
     @track objFlowModal = false;
     @track fieldsTableVisible = false;
+    @track flowSelectPage = false;
     @track schedulingPage = false;
     @track filteringPage = false;
-    @track progressIndicator = 'Step1';
+    @track progressIndicator = 'Step0';
     @track createdDateFilterValue;
     @track recordTypeValue;
     @track selectedRecordTypes = [];
@@ -87,6 +92,9 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     @track backNavigationVisibility = true;
     @track cancelNavigationVisibility = false;
     @track SaveNavigationVisibility=true;
+
+    @track regularFlowSelected = false;
+    @track childrenFlowSelected = false;
 
     @track selectObject;
     @track selectedFields;
@@ -103,26 +111,44 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     @track summaryList;
      
     @track sortBy;
+    @track sortRelatedBy;
     @track sortDirection;
+    @track sortRelatedDirection;
     
+    @track configurationRequired = true;
+    
+    @track componentIsLoading = true;
+
    
     handleSortObjectData(event) {       
+        console.log('handleSortObjectData');
         this.sortBy = event.detail.fieldName;       
         this.sortDirection = event.detail.sortDirection;       
         this.sortObjectData(event.detail.fieldName, event.detail.sortDirection,this.objList,'ObjectData');
     }
+
+   
+    handleSortRelatedObjectData(event) {       
+        console.log('handleSortRelatedObjectData');
+        this.sortRelatedBy = event.detail.fieldName;       
+        this.sortRelatedDirection = event.detail.sortDirection;       
+        this.sortObjectData(event.detail.fieldName, event.detail.sortDirection,this.relatedObjList,'ObjectData');
+    }
     handleSortFieldsData(event) {       
+        console.log('handleSortFieldsData');
         this.sortBy = event.detail.fieldName;       
         this.sortDirection = event.detail.sortDirection;       
         this.sortObjectData(event.detail.fieldName, event.detail.sortDirection,this.fieldList,'ObjectFields');
     }
     handleSortHerokuData(event) {       
+        console.log('handleSortHerokuData');
         this.sortBy = event.detail.fieldName;       
         this.sortDirection = event.detail.sortDirection;       
         this.sortObjectData(event.detail.fieldName, event.detail.sortDirection,this.recordsToDisplay,'herokuData');
     }
  
     sortObjectData(fieldname, direction,sourceData,sourceType) {
+        console.log('sortObjectData');
         
         let parseData = JSON.parse(JSON.stringify(sourceData));
        
@@ -176,22 +202,26 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
         ];
     }
     
-  handlePaginatorChange(event) {
+    handlePaginatorChange(event) {
+        console.log('handlePaginatorChange');
             this.recordsToDisplay = event.detail;
             if (this.recordsToDisplay[0])
                 this.rowNumberOffset = this.recordsToDisplay[0].rowNumber - 1;
         }
 
     handleChangeWeek(event){
+        console.log('handleChangeWeek');
         var sele=event.detail.value;  
          this.selectedValue = sele.join(",");    
         console.log('days----'+this.selectedValue);
     }
     handleschChange(event){
+        console.log('handleschChange');
         this.schselectedValue = event.target.value;
         console.log('runs by'+this.schselectedValue);
     }
     handleschChangetime(event){
+        console.log('handleschChangetime');
         this.schselectedValueTime = event.target.value;
         console.log('schselectedValueTime by'+this.schselectedValueTime);
     }
@@ -201,27 +231,39 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     }
 
     connectedCallback() {
+        console.log('connectedCallback');
+        this.componentIsLoading = true;
         this.getHerokuSummary();
-        loadObjects()
+        loadConfig()
             .then((result) => {
-                this.objList = result;
-                this.allObjectsTable = true;
-                this.initialRecordsObject = result;
-                this.allObjevctSelectUI = [];
+                if(result){
+                    console.log('result');
+                    console.log(result);
+                    this.configurationRequired = false;
+                }
+                this.componentIsLoading = false;
             })
             .catch((error) => {
+                this.componentIsLoading = false;
+                console.error('loadConfig error');
+                console.error(error);
                 this.error = error;
-                this.fieldList = undefined;
             });
     }
-     resetAction() {
+
+    resetAction() {
+        console.log('resetAction');
        this.filterCondition='';  
     }
+
     hideModalBox() {  
+        console.log('hideModalBox');
         this.isShowModal = false;
         this.selectedRowObjName='';  
     }
-    getHerokuSummary(){       
+
+    getHerokuSummary(){  
+        console.log('getHerokuSummary');     
          getSummaryHerokuRecs()
             .then((result) => {
                 console.log('watch resule;;;',result);
@@ -268,7 +310,9 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
 
 
     }
+
     showModalBox(event) {
+        console.log('showModalBox'); 
             let element = this.selectedObjList.find(ele  => ele.objectAPIName === event.target.dataset.id);
         console.log('syntaxCheckAction element --->',element);    
         this.filterCondition =element.ObjWhereCondition;
@@ -280,6 +324,7 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     }
     
     filterUpdate(event){
+        console.log('filterUpdate'); 
         this.filterCondition = event.target.value;
         console.log('filterCondition 1: '+this.filterCondition);
         this.syntaxCheckVisibility = false;
@@ -291,9 +336,9 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
         else if(this.filterCondition == null || this.filterCondition == '')
             this.syntaxCheckVisibility = true;  */
     }
-
    
     syntaxCheckAction(){
+        console.log('syntaxCheckAction');
         console.log('syntaxCheckAction element 0--->',this.selectedRowObjName);
          console.log('syntaxCheckAction element 0filterCondition--->',this.filterCondition);
        if(this.filterCondition!='' && this.filterCondition!=null){
@@ -352,7 +397,9 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
                     this.dispatchEvent(eventSuccess);
         }
     }
+
     saveMetadataAction(){
+        console.log('saveMetadataAction');
         var dateValidated = false;
         let startsAt = this.template.querySelector(".startsAt");
         let dateCmp = this.template.querySelector(".dateCls");
@@ -397,10 +444,15 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
         }
         })
         .catch((error) => {
+            let errors = '';
+            error.body.pageErrors.forEach(err => {
+                errors += err.message;
+            });
+            console.log(errors);
             const eventError = new ShowToastEvent({
                 title: 'Error!',
                 variant: 'error',
-                message:error,
+                message: errors,
             });
             this.dispatchEvent(eventError);
             this.error = error;
@@ -410,6 +462,7 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     }
 
     prepareData(){
+        console.log('prepareData');
             var fetchedDataSA = JSON.parse(JSON.stringify(this.selectedObjList));
         //var fetchedDataSA = this.selectedObjList;
         console.log('fetchedDataSA=====',fetchedDataSA);
@@ -430,11 +483,19 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
         });
         this.selectedObjList = fetchedDataSA;
     }
+
+    parentObjectRowSelection(event){
+
+    }
+
     allObjectRowSelection(event) {
+        console.log('allObjectRowSelection');
         console.log('Log entered here: ',JSON.stringify(event.detail.selectedRows));
         var selectedRows=event.detail.selectedRows;
          console.log('Watch Lenght:::',selectedRows.length);
-          this.nextNavigationVisibility = false;
+         if(!this.childrenFlowSelected){
+             this.nextNavigationVisibility = false;
+         }
           this.selectedObjList=selectedRows.slice(0, 5);
          if(selectedRows.length>5){
              this.showToastMessage('You can only select 5 objects for archieving.','Error');
@@ -474,6 +535,7 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     }
 
     showToastMessage(displayMessage,displayMode){
+        console.log('showToastMessage');
          const event = new ShowToastEvent({
                 title: 'Error',
                 variant: displayMode,
@@ -483,6 +545,7 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     }
 
     selectedObjectRowSelection(event) {
+        console.log('selectedObjectRowSelection');
         this.fieldList='';
        //var el = this.template.querySelector('lightning-datatable');
         //selectedRows=el.selectedRows=el.selectedRows.slice(0,0);
@@ -509,6 +572,7 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     }
 
     selectedFieldRowSelection(event) {
+        console.log('selectedFieldRowSelection');
         var selectedRows=event.detail.selectedRows;
         this.selectedFields = selectedRows;
         console.log('selected fields: '+this.selectedFields)
@@ -535,9 +599,9 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
         console.log('syntaxCheckAction element --->',element);
        // this.selectedFields = seletedFields;
     }
-
     
     allObjectNextAction(){
+        console.log('allObjectNextAction');
         this.allObjectsTable = false;
         this.selectedObjectsTable = true;
         this.schedulingPage = false;
@@ -563,9 +627,11 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     }
 
     nextNavigationAction(){
+        console.log('nextNavigationAction');
         if(this.progressIndicator == 'Step1'){
             console.log('This is step-1');
             this.allObjectsTable = false;
+            this.parentObjectsTable = false;
             this.selectedObjectsTable = true;
             this.progressIndicator = 'Step2';
             this.nextNavigationVisibility = false;
@@ -601,6 +667,7 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     }
 
     backNavigationAction(){
+        console.log('backNavigationAction');
         this.nextbutton=true;
         this.savebutton=false;
         this.nextNavigationVisibility=false;
@@ -635,6 +702,7 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     }
 
     homeBarAction(){
+        console.log('homeBarAction');
         this.allObjectsTable = false;
             this.selectedObjectsTable = false;
             this.filteringPage = false;
@@ -647,32 +715,76 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     }
 
     allObjectSideBarAction(){
+        console.log('allObjectSideBarAction');
         this.homeSummary = false;
         this.allObjects = true;
-            this.allObjectsTable = true;
+        this.flowSelectPage = true;
+            this.allObjectsTable = false;
+            this.parentObjectsTable = false;
             this.selectedObjectsTable = false;
             this.filteringPage = false;
             this.schedulingPage = false;
-            this.progressIndicator = 'Step1';
+            this.progressIndicator = 'Step0';
             this.nextNavigationVisibility = true;
             this.backNavigationVisibility = true;
             
-             this.selectedStep = 'Step1';
+             this.selectedStep = 'Step0';
              this.SaveNavigationVisibility=true;
-             this.nextNavigationVisibility=false;
+             this.cancelNavigationVisibility=true;
              this.savebutton=false;
              this.nextbutton=true;
-             this.backNavigationVisibility=false;
              this.fieldList='';
              
     }
 
+    selectRegularFLow(){
+        this.componentIsLoading = true;
+        console.log('selectRegularFLow');
+        this.regularFlowSelected = true;
+        this.childrenFlowSelected = false;
+        this.allObjectsTable = true;
+        this.parentObjectsTable = false;
+        this.activateStepOne();
+    }
+    
+    selectChildrenFlow(){
+        this.componentIsLoading = true;
+        console.log('selectChildrenFlow');
+        this.regularFlowSelected = false;
+        this.childrenFlowSelected = true;
+        this.allObjectsTable = false;
+        this.parentObjectsTable = true;
+        this.activateStepOne();
+    }
+
+    activateStepOne(){
+        console.log('activateStepOne');
+        this.progressIndicator = 'Step1';
+        this.flowSelectPage = false;
+        this.backNavigationVisibility = false;
+    
+        loadObjects()
+            .then((result) => {
+                this.componentIsLoading = false;
+                this.objList = result;
+                this.initialRecordsObject = result;
+                this.allObjevctSelectUI = [];
+            })
+            .catch((error) => {
+                this.componentIsLoading = false;
+                this.error = error;
+                this.fieldList = undefined;
+            });
+    }
+
     handleCreatedDateFilterChange(event) {
+        console.log('handleCreatedDateFilterChange');
         this.createdDateFilterValue = event.detail.value;
         console.log("Selected Value be: "+this.createdDateFilterValue);
     }
 
     recordTypeChange(event) {
+        console.log('recordTypeChange');
         this.recordTypeValue = event.detail.value;
         if(!this.selectedRecordTypes.includes(event.detail.value)){
             this.selectedRecordTypes.push(event.detail.value);
@@ -680,8 +792,14 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     }
 
     handleRemove_RecordType(event){
+        console.log('handleRemove_RecordType');
         const valueRemoved = event.target.name;
         this.selectedRecordTypes.splice(this.selectedRecordTypes.indexOf(valueRemoved), 1); 
+    }
+
+    selectStep0() {
+        console.log('this is Step0');
+        this.selectedStep = 'Step0';
     }
 
     selectStep1() {
@@ -705,6 +823,7 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     }
 
     handleSearch_Object(event) {
+        console.log('handleSearch_Object');
         const searchKey = event.target.value.toLowerCase();
  
         if (searchKey) {
@@ -717,7 +836,6 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
                     let valuesArray = Object.values(record);
  
                     for (let val of valuesArray) {
-                        console.log('val is ' + val);
                         let strVal = String(val);
  
                         if (strVal) {
@@ -737,6 +855,7 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     }
 
     handleSearch_Field(event) {
+        console.log('handleSearch_Field');
         const searchKey = event.target.value.toLowerCase();
         this.selectedFields = this.selectedFields;
         if (searchKey) {
@@ -769,6 +888,7 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     }
 
     refreshFields(){
+        console.log('refreshFields');
         getFields({ selectedObject: this.selectObject[0].objectAPIName })
             .then((result) => {
                 this.fieldList = result.fieldDetails;
@@ -787,6 +907,7 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
     }
 
     refreshObjects(){
+        console.log('refreshObjects');
         loadObjects()
             .then((result) => {
                 this.objList = result;
@@ -799,11 +920,25 @@ export default class HerokuAdminUI extends NavigationMixin(LightningElement) {
             });
     }
 
-
-
     handleRowAction(event) {
+        console.log('handleRowAction');
         const row = event.detail.row;
         row.expandable = !row.expandable;
+    }
+
+    generateConfiguration(){
+        console.log('generateConfiguration');
+        this.componentIsLoading = true;
+        generateSyncConfig()
+            .then((result) => {
+                this.componentIsLoading = false;
+                this.configurationRequired = false;
+            })
+            .catch((error) => {
+                console.error(error);
+                this.componentIsLoading = false;
+                this.error = error;
+            });
     }
 
 }

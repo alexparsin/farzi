@@ -71,6 +71,32 @@ global class HerokuAdminUIController {
         }
         
     }
+
+    @AuraEnabled(cacheable = true)
+    public static Heroku_Sync_Settings__c getSyncConfig(){
+        try {
+            return HerokuSyncUtils.getSyncConfiguration();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @AuraEnabled
+    public static string generateSyncConfig(){
+        Profile adminProfile = [SELECT Id FROM Profile WHERE Name = 'System Administrator'];
+        Heroku_Sync_Settings__c hss = Heroku_Sync_Settings__c.getInstance(adminProfile.Id);
+        if(hss == null){
+            hss = new Heroku_Sync_Settings__c();
+        }
+        hss.SetupOwnerId = adminProfile.Id;
+        hss.Encryption_Key_Heroku__c = EncodingUtil.base64Encode(Crypto.generateAesKey(256));
+        hss.Encryption_Key_SF__c = EncodingUtil.base64Encode(Crypto.generateAesKey(256));
+        hss.Endpoint__c = 'https://eleks.herokuapp.com/';
+        hss.Init_Vector_Heroku__c = EncodingUtil.base64Encode(Crypto.generateAesKey(128));
+        hss.Init_Vector_SF__c = EncodingUtil.base64Encode(Crypto.generateAesKey(128));
+        upsert hss;
+        return 'success';
+    }
     
     
     global class objectDetails{
