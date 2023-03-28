@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Schedule_Date_should</fullName>
+    <active>false</active>
+    <description>The schedule date must be future</description>
+    <errorConditionFormula>Date__c   &lt;  TODAY()</errorConditionFormula>
+    <errorDisplayField>Date__c</errorDisplayField>
+    <errorMessage>Date Must be Greater than Today or In future</errorMessage>
+</ValidationRule>

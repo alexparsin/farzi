@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>All1</fullName>
+    <columns>NAME</columns>
+    <columns>Filter_Condition_1__c</columns>
+    <columns>Filter_Condition_2__c</columns>
+    <columns>Filter_Condition_3__c</columns>
+    <columns>Filter_Condition_4__c</columns>
+    <columns>Filter_Condition_5__c</columns>
+    <filterScope>Everything</filterScope>
+    <label>All</label>
+</ListView>
