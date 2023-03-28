@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>The purpose of this tab is for configuring Objects and fields that are be configured for storing thier archieved data in Heroku Postgres.</description>
-    <label>Admin Page</label>
-    <lwcComponent>herokuAdminUI</lwcComponent>
-    <motif>Custom67: Gears</motif>
-</CustomTab>
